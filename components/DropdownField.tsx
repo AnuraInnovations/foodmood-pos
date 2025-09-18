@@ -125,7 +125,7 @@ export default function DropdownField({
                   key={index}
                   type="button"
                   onClick={() => handleSelect(option)}
-                  className={`w-full text-${valueAlignment} px-4 py-2 text-sm hover:bg-[var(--accent)]/50 hover:text-[var(--secondary)] transition-colors ${
+                  className={`w-full text-${valueAlignment} px-4 py-2 text-sm hover:bg-[var(--accent)]/50 hover:text-[var(--secondary)] text-[${fontSize}] transition-colors ${
                     selectedValue === option 
                       ? 'bg-[var(--accent)] text-[var(--primary)] font-medium' 
                       : 'text-[var(--secondary)]'

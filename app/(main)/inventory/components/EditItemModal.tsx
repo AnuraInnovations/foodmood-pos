@@ -135,7 +135,7 @@ export default function EditItemModal({
           /* Loading Screen */
           <div className="text-center py-12">
             <div className="w-12 h-12 bg-transparent rounded-xl mx-auto mb-4 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-dashed border-[var(--accent)]"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-3 border-dashed border-[var(--accent)]"></div>
             </div>
             <h3 className="text-xl font-bold text-[var(--secondary)] mb-2">
               {showDeleteConfirm ? 'Removing Item...' : 'Updating Item...'}
@@ -443,15 +443,15 @@ export default function EditItemModal({
         <div className="flex gap-4 mt-8 grid-cols-3">
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="flex-1 px-6 py-3 bg-[var(--error)]/10 hover:bg-[var(--error)]/40 text-[var(--error)] rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex-1 px-6 py-3 shadow-md text-sm text-[var(--error)] bg-white border border-[var(--error)]/50 rounded-lg hover:bg-[var(--error)]/20 hover:scale-105 active:shadow-none active:scale-95 transition-all font-black"
           >
-            Remove
+            REMOVE
           </button>
           <button
             onClick={closeModal}
-            className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-[var(--secondary)] rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex-1 px-6 py-3 shadow-md text-sm text-[var(--secondary)]/80 bg-white border border-[var(--secondary)]/20 rounded-lg hover:bg-[var(--secondary)]/10 active:shadow-none hover:scale-105 active:scale-95 transition-all font-black"
           >
-            Cancel
+            CANCEL
           </button>
           <button
             onClick={saveItemEdit}
@@ -462,17 +462,17 @@ export default function EditItemModal({
               parseFloat(priceInput) <= 0 ||
               (costInput !== '' && (isNaN(parseFloat(costInput)) || parseFloat(costInput) < 0))
             }
-            className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all active:scale-95 ${
+            className={`flex-1 px-6 py-3 shadow-md rounded-lg font-black text-sm transition-all active:scale-95 active:shadow-none ${
               localEditingItem.name.trim() && 
               priceInput !== '' && 
               !isNaN(parseFloat(priceInput)) && 
               parseFloat(priceInput) > 0 &&
               (costInput === '' || (!isNaN(parseFloat(costInput)) && parseFloat(costInput) >= 0))
-                ? 'bg-[var(--accent)] hover:bg-[var(--accent)] text-[var(--primary)] text-shadow-lg hover:scale-105 cursor-pointer'
+                ? 'bg-[var(--accent)] hover:bg-[var(--accent)]/50 text-[var(--primary)] text-shadow-lg hover:scale-105 cursor-pointer'
                 : 'bg-[var(--secondary)]/20 text-[var(--secondary)]/40 hover:scale-100 cursor-not-allowed'
             }`}
           >
-            Save
+            SAVE
           </button>
         </div>
 
@@ -492,18 +492,18 @@ export default function EditItemModal({
                 <p className="text-[var(--secondary)] opacity-70 mb-6">
                   Are you sure you want to remove <strong>{localEditingItem.name}</strong>? This action cannot be undone.
                 </p>
-                <div className="flex gap-3">
+                <div className="flex grid-cols-2 gap-3">
                   <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 px-4 py-3 text-sm text-[var(--secondary)]/80 bg-white border border-[var(--secondary)]/20 rounded-lg hover:bg-gray-50 hover:shadow-md transition-colors font-black"
+                      className="flex-1 py-3 text-sm text-[var(--secondary)]/80 bg-white border border-[var(--secondary)]/20 rounded-lg hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all font-black"
                   >
                       CANCEL
                   </button>
                   <button
                     onClick={() => handleDeleteItem(localEditingItem.id)}
-                    className="flex-1 py-3 bg-[var(--error)] hover:bg-[var(--error)]/50 text-white rounded-xl font-semibold transition-all hover:scale-105 active:scale-95"
+                    className="flex-1 py-3 text-sm bg-[var(--error)] hover:bg-[var(--error)]/50 text-white rounded-lg font-black transition-all hover:scale-105 active:scale-95"
                   >
-                    Remove
+                    REMOVE
                   </button>
                 </div>
               </div>

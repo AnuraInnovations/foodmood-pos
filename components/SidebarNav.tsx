@@ -16,9 +16,7 @@ export default function SidebarNav() {
     const { logout } = useAuth();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const router = useRouter();
-
     const pathname = usePathname();
-    
     const navItems = [
         {
             href: "/store",
@@ -51,9 +49,7 @@ export default function SidebarNav() {
             icon: SettingsIcon,
         },
     ];
-    
-
-    
+        
     const handleLogout = async () => {
     if (isLoggingOut) return;
     
@@ -70,11 +66,11 @@ export default function SidebarNav() {
     
     return (
         // Sidebar container
-        <div className="h-full w-[80px] lg:w-[271px] bg-[var(--primary)] border-r border-gray-200 duration-400">
+        <div className="h-full w-[0px] sm:w-[0px] md:w-[80px] lg:w-[200px] bg-[var(--primary)] border-r border-gray-200 duration-400">
             <div className="flex flex-col h-full">
          
                 {/* Logo */}
-                <div className="flex items-center border-b border-gray-200 bg-[var(--accent)] h-[90px] px-6">
+                <div className="flex items-center border-b border-gray-200 bg-[var(--accent)] h-[60px] p-0 md:px-6">
                     <HorizontalLogo className="invisible w-0 lg:visible lg:w-auto opacity-0 lg:opacity-100 transition-all"/>
                     <LogoIcon className="visible w-auto lg:invisible lg:w-0 opacity-100 lg:opacity-0 transition-all" />
                 </div>
@@ -90,7 +86,7 @@ export default function SidebarNav() {
                             <li key={item.href}>
                                 <Link 
                                     href={item.href}
-                                    className={`flex h-10 items-center text-[14px] font-semibold ${
+                                    className={`flex h-10 items-center text-[12px] font-semibold ${
                                         isActive 
                                             ? 'bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-[var(--primary)] text-shadow-lg'
                                             : 'bg-[var(--primary)] hover:bg-[var(--accent)]/50 text-[var(--secondary)]'
@@ -108,13 +104,13 @@ export default function SidebarNav() {
                             <button
                                 onClick={handleLogout}
                                 disabled={isLoggingOut}
-                                className="flex w-full h-10 items-center text-[14px] text-[var(--error)] hover:text-[var(--primary)] font-semibold bg-[var(--primary)] hover:bg-[var(--error)] cursor-pointer transition-colors duration-400"
+                                className="flex w-full h-10 items-center text-[12px] text-[var(--error)] group hover:text-[var(--primary)] font-semibold bg-[var(--primary)] hover:bg-[var(--error)] cursor-pointer"
                             >
-                                <div className="w-full flex items-center justify-center lg:justify-start transition-all duration-300">
+                                <div className="w-full flex items-center justify-center lg:justify-start">
                                     <span className="size-8 mx-3">
-                                        <LogoutIcon className="gap-3 text-[var(--error)]" />
+                                        <LogoutIcon className="gap-3 text-[var(--error)] group-hover:text-[var(--primary)]" />
                                     </span>
-                                    <span className="invisible w-0 lg:visible lg:w-auto opacity-0 lg:opacity-100 transition-all duration-300 ">
+                                    <span className="invisible w-0 lg:visible lg:w-auto opacity-0 lg:opacity-100">
                                         {"Logout"}
                                     </span>
                                 </div>

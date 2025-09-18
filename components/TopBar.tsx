@@ -17,10 +17,10 @@ interface TopBarProps {
 }
 
 export default function TopBar({ title, icon }: TopBarProps) {
-  const { toggle: toggleDrawer } = useDrawer();
+  const { isOpen, toggle: toggleDrawer } = useDrawer();
   const { date, time, isInternetTime, isLoading, forceSync } = useDateTime();
   const { user } = useAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [ isRefreshing, setIsRefreshing ] = useState(false);
 
   const handleRefresh = async () => {
     if (isRefreshing) return;
@@ -40,46 +40,46 @@ export default function TopBar({ title, icon }: TopBarProps) {
 
   return (
     <div className="flex-shrink-0">
-      <div className="flex items-center justify-between h-[90px] w-full">
+      <div className="flex items-center justify-between h-[60px] w-full">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 overflow-x-auto">
           <button
             onClick={toggleDrawer}
-            className="ml-6 my-[17px] h-14 w-14 min-w-14 bg-[var(--primary)] rounded-xl flex justify-center items-center hover:scale-110 hover:shadow-lg transition-all cursor-pointer flex-shrink-0"
+            className="ml-6 my-[17px] size-10 min-w-10 bg-[var(--primary)] rounded-xl flex justify-center items-center hover:scale-110 hover:shadow-md transition-all cursor-pointer flex-shrink-0"
           >
-            <MenuBurger />
+            <MenuBurger className="size-4 text-[var(--secondary)]"/>
           </button>
           
           {/* User Info*/}
           <div className="relative group">
-            <div className="flex-shrink-0 min-w-[30px] h-14 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium text-[12px] lg:text-[14px]">
-              <span className="my-6 w-8 h-8 bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)]">
-                <UserIcon />
+            <div className="flex-shrink-0 min-w-[30px] h-10 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium lg:text-[14px]">
+              <span className="my-6 size-6 bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)]">
+                <UserIcon className="size-4 text-[var(--secondary)]"/>
               </span>
-              <span>{userDisplayName}</span>
+              <span className="text-[10px]">{userDisplayName}</span>
             </div>
           </div>
 
-          <div className="flex-shrink-0 min-w-[30px] h-14 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium text-[12px] lg:text-[14px]">
-            <span className="w-8 h-8 bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)]">
-              <CalendarIcon />
+          <div className="flex-shrink-0 min-w-[30px] h-10 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium lg:text-[14px]">
+            <span className="size-6 bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)]">
+              <CalendarIcon className="size-4 text-[var(--secondary)]"/>
             </span>
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start text-[10px]">
               {isLoading && !date ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
                   <span>{date}</span>
                   {!isInternetTime && date && (
-                    <span className="text-xs opacity-70">(Local)</span>
+                    <span className="text-[6px] opacity-70">(Device Time)</span>
                   )}
                 </>
               )}
             </div>
           </div>
           <span className="hidden sm:inline">-</span>
-          <div className="flex-shrink-0 min-w-[8rem] h-14 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium text-[12px] lg:text-[14px]">
-            <span className="w-8 h-8 pl-[2px] bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)] font-bold text-sm">
-              <ClockIcon />
+          <div className="flex-shrink-0 min-w-[8rem] h-10 px-3 py-3 text-center flex bg-[var(--primary)] rounded-xl text-[var(--secondary)] gap-3 items-center font-medium text-[12px] lg:text-[14px]">
+            <span className="size-6 pl-[2px] bg-[var(--light-accent)] rounded-full flex items-center justify-center text-[var(--secondary)] font-bold text-sm">
+              <ClockIcon className="size-4 text-[var(--secondary)] mr-[1px]"/>
             </span>
             <div className="flex flex-row items-center gap-2">
               {isLoading && !time ? (
@@ -90,7 +90,7 @@ export default function TopBar({ title, icon }: TopBarProps) {
                     <span className="bg-[var(--error)]/20 size-3 border-2 border-[var(--error)] border-dashed rounded-full shadow-sm animate-spin"/>
                   ):
                     <span className="bg-[var(--success)]/20 size-3 border-2 border-[var(--success)] border-dashed rounded-full shadow-sm animate-spin"/>}
-                  <span className="animate-pulse ">{time}</span>
+                  <span className="animate-pulse text-[10px]">{time}</span>
                 </>
               )}
             </div>
@@ -111,9 +111,9 @@ export default function TopBar({ title, icon }: TopBarProps) {
 
       {/* Page Title */}
       {title && (
-        <div className="flex items-center justify-start ml-6 mt-[8px] py-[4px]">
+        <div className="flex items-center justify-start ml-4">
           {icon}
-          <h1 className="text-[var(--secondary)] text-2xl font-bold">
+          <h1 className="text-[var(--secondary)] text-lg font-bold">
             {title}
           </h1>
         </div>

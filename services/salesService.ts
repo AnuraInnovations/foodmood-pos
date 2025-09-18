@@ -226,5 +226,3 @@ export const getWeekStart = (date: Date = new Date()): Date => {
   return start;
 };
 
-// Re-export currency formatting utilities
-export { formatCurrency, formatPercentage, formatNumber } from '../lib/currency_formatter';

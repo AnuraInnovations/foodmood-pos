@@ -14,9 +14,10 @@ import TopBar from "@/components/TopBar";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { subscribeToOrders } from '@/stores/dataStore';
 import { Order } from '@/services/orderService';
-import { formatCurrency } from '@/services/salesService';
 import SearchIcon from '../store/icons/SearchIcon';
 import SalesIcon from '@/components/icons/SidebarNav/SalesIcon';
+import { formatCurrency } from '@/utils/currency';
+import NoOrdersIcon from './icons/NoOrdersIcon';
 
 interface TimeSeriesData {
   label: string;
@@ -280,23 +281,23 @@ export default function SalesScreen() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Order ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Date & Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Items</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Total</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Profit</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Order ID</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider whitespace-nowrap">Date & Time</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Items</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Total</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-[var(--secondary)]/60 uppercase tracking-wider">Profit</th>
                     </tr>
                   </thead>
                   <tbody className="bg-[var(--primary)] divide-y divide-gray-200">
                     {currentOrders.map((order) => (
                       <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-1 whitespace-nowrap text-sm font-medium text-[var(--secondary)]">
-                          <div className='px-2 py-1 bg-[var(--secondary)]/10 max-w-[120px] text-center font-regular rounded-[12px]'>
-                            #{order.id ? order.id.slice(-8) : 'N/A'}
+                        <td className="px-2 py-2 flex flex-1 text-center items-center justify-center h-16">
+                          <div className='px-4 py-1 bg-[var(--secondary)]/10 text-center max-w-[160px] truncate text-[10px] font-medium text-[var(--secondary)] rounded-[12px] font-mono'>
+                            #{order.id ? order.id : 'N/A'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--secondary)]">
+                        <td className="px-2 py-4 text-xs text-center text-[var(--secondary)] max-w-[20px]">
                           {order.createdAt ? order.createdAt.toDate().toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -304,41 +305,40 @@ export default function SalesScreen() {
                             minute: '2-digit'
                           }) : 'N/A'}
                         </td>
-                        <td className="px-6 py-1 text-sm text-[var(--secondary)]">
-                          <div className="max-w-xs">
-                            <div className="truncate flex-wrap space-y-1">
+                        <td className="px-6 py-1 text-sm text-[var(--secondary)] max-w-[300px]">
+                          <div className="h-16">
+                            <div className="flex items-center overflow-x-auto h-full">
                                 {order.items && order.items.length > 0 ? (
-                                  order.items.length > 3 
-                                    // ? `${order.items.slice(0, 3).map(item => `${item.name || 'Unknown'} x${item.quantity || 0}`).join(', ')} `
-                                    ? <> {order.items.slice(0, 2).map(
-                                      item => { 
-                                        return <div className='flex-row items-center inline-flex text-[12px] mr-1 gap-1 border-1 border-[var(--secondary)]/20 p-1 px-2 rounded-full' key={item.id}>
+                                  <div className='flex-wrap flex flex-row items-center gap-1'>
+                                  {order.items.length > 3 
+                                    ? <> {order.items.slice(0, 5).map(
+                                      (item, index) => { 
+                                        return <div key={item.id} className='flex-row items-center inline-flex text-[10px] mr-1 gap-1 border-1 border-[var(--secondary)]/20 p-1 px-2 rounded-full'>
                                             {`${item.name || 'Unknown'}`} 
                                             <div className='size-5 bg-[var(--secondary)]/20 rounded-full text-center text-[10px] p-1'>
                                               {`${item.quantity || 0}`}
                                             </div>
                                           </div>
                                       })}
-                                      <div className='flex items-center justify-center h-[25px] w-15 bg-[var(--accent)]/50 rounded-full text-center text-[10px] p-1'>{`+${order.items.length - 2} more`}</div>
+                                      <span className='flex items-center justify-center h-[25px] w-15 bg-[var(--accent)]/50 rounded-full text-center text-[10px] p-1'>{`+${order.items.length - 2} more`}</span>
+
                                       </>
                                     : order.items.map(
                                       item => { 
-                                        return <div className='flex-row items-center inline-flex text-[12px] mr-1 gap-1 border-1 border-[var(--secondary)]/20 p-1 px-2 rounded-full' key={item.id}>
+                                        return <div key={item.id} className='flex-row items-center inline-flex text-[10px] mr-1 gap-1 border-1 border-[var(--secondary)]/20 p-1 px-2 rounded-full'>
                                             {`${item.name || 'Unknown'}`} 
                                             <div className='size-5 bg-[var(--secondary)]/20 rounded-full text-center text-[10px] p-1'>
                                               {`${item.quantity || 0}`}
                                             </div>
                                           </div>
 
-                                      })
+                                      })}
+                                      </div>
                                 ) : 'No items'}
-
-                              
                             </div>
-                            <p className="text-xs text-[var(--secondary)]/50 mt-1">= {order.itemCount || 0} items total</p>
                           </div>
                         </td>
-                        <td className="px-6 py-1 whitespace-nowrap">
+                        <td className="px-6 py-1 flex justify-center whitespace-nowrap">
                           <div className={`p-2 text-xs text-center w-[100px] font-semibold rounded-full ${
                             (order.orderType || 'DINE-IN') === 'DINE-IN' ? 'bg-blue-100 text-blue-800' :
                             (order.orderType || 'DINE-IN') === 'TAKE OUT' ? 'bg-green-100 text-green-800' :
@@ -347,10 +347,10 @@ export default function SalesScreen() {
                             {order.orderType || 'DINE-IN'}
                           </div>
                         </td>
-                        <td className="px-6 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-1 flex-1 justify-center whitespace-nowrap text-sm text-center font-medium text-gray-900">
                           {formatCurrency(order.total || 0)}
                           {order.discountAmount > 0 && (
-                            <div className="text-xs text-red-500">
+                            <div className="text-xs text-red-500 text-center">
                               -{formatCurrency(order.discountAmount)}
                             </div>
                           )}
@@ -365,12 +365,10 @@ export default function SalesScreen() {
 
                 {currentOrders.length === 0 && (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zm2 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                      </svg>
+                    <div className="w-16 h-16 mx-auto mb-4 bg-[var(--accent)]/10 rounded-full flex items-center justify-center">
+                      <NoOrdersIcon className="w-8 h-8 text-[var(--secondary)]/50"/>
                     </div>
-                    <p className="text-gray-500">
+                    <p className="text-[var(--secondary)]/50">
                       {searchTerm ? 'No orders found matching your search' : 'No orders yet'}
                     </p>
                   </div>

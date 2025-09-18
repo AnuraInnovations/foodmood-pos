@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { subscribeToDiscounts, Discount, calculateDiscountAmount } from "@/services/discountService";
 import { Category } from "@/services/categoryService";
-import { formatCurrency } from "@/lib/currency_formatter";
+import { formatCurrency } from "@/utils/currency";
 
 interface DiscountDropdownProps {
   value: string;

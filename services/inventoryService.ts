@@ -25,12 +25,6 @@ export interface InventoryItem {
   updatedAt?: Timestamp;
 }
 
-export interface Category {
-  id: string; // Changed from number to string
-  name: string;
-  color: string;
-}
-
 const COLLECTION_NAME = 'inventory';
 
 // Create a new inventory item

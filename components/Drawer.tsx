@@ -61,8 +61,8 @@ export default function Drawer({ isOpen: externalIsOpen, onToggle, children }: D
       <div className="flex h-full w-full">
         {/* Left Sidebar/Drawer - Takes up space in layout */}
         <div className={`
-          ${isDrawerOpen ? 'w-[80px] lg:w-[271px]' : 'w-0'} 
-          transition-all duration-300 ease-in-out overflow-hidden
+          ${isDrawerOpen ? 'w-[80px] lg:w-[200px]' : 'w-0'} 
+          hidden md:flex transition-all duration-300 ease-in-out overflow-hidden
         `}>
           <SidebarNav/>
         </div>

@@ -19,9 +19,9 @@ import {
 import EditIcon from "../store/icons/EditIcon";
 import PlusIcon from "../../../components/icons/PlusIcon";
 import DeleteIcon from "../store/icons/DeleteIcon";
-import { formatCurrency } from "@/lib/currency_formatter";
 import EmptyInventory from "./illustrations/EmptyInventory";
 import InventoryIcon from "@/components/icons/SidebarNav/InventoryIcon";
+import { formatCurrency } from "@/utils/currency";
 
 interface Item extends InventoryItem {
 	id: string; // Make id required for local state

@@ -1,30 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import DropdownField from "@/components/DropdownField";
-import TopBar from "@/components/TopBar";
-import MinusIcon from "./icons/MinusIcon";
-import OrderCartIcon from "./icons/OrderCartIcon";
-import { InventoryItem } from "@/services/inventoryService";
+import { useBluetoothPrinter } from "@/contexts/BluetoothContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToInventoryItems, subscribeToCategories } from "@/stores/dataStore";
-import SearchIcon from "./icons/SearchIcon";
 import { loadSettingsFromLocal } from "@/services/settingsService";
 import { createOrder } from "@/services/orderService";
-import { useAuth } from "@/contexts/AuthContext";
 import { Category } from "@/services/categoryService";
-import EmptyOrderIllustration from "./illustrations/EmptyOrder";
-import EmptyStoreIllustration from "./illustrations/EmptyStore";
-import LogoIcon from "./icons/LogoIcon";
-import SafeImage from "@/components/SafeImage";
-import DiscountDropdown from "@/app/(main)/store/components/DiscountDropdown";
 import { Discount } from "@/services/discountService";
-import StoreIcon from "@/components/icons/SidebarNav/StoreIcon";
-import { AnimatePresence, motion } from "motion/react";
-import PlusIcon from "@/components/icons/PlusIcon";
-
-import { formatCurrency } from "@/lib/currency_formatter";
 import { formatReceiptWithLogo } from "@/lib/esc_formatter";
-import { useBluetoothPrinter } from "@/contexts/BluetoothContext";
+import { formatCurrency } from "@/utils/currency";
+import { InventoryItem } from "@/services/inventoryService";
+
+import TopBar from "@/components/TopBar";
+import LogoIcon from "./icons/LogoIcon";
+import StoreIcon from "@/components/icons/SidebarNav/StoreIcon";
+import SearchIcon from "./icons/SearchIcon";
+import SafeImage from "@/components/SafeImage";
+import RightSidePanel from "./components/RightSidePanel";
+import EmptyStoreIllustration from "./illustrations/EmptyStore";
+import { isSea } from "node:sea";
 
 
 // Toast notification component
@@ -80,8 +75,8 @@ const SuccessToast = ({
 };
 
 export default function StoreScreen() {
-    const { user } = useAuth(); // Get current authenticated user
-    const { printReceipt } = useBluetoothPrinter(); // Get Bluetooth printer function
+    const { user } = useAuth();
+    const { printReceipt } = useBluetoothPrinter();
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]); // For multiple category filtering
     const [searchQuery, setSearchQuery] = useState("");
@@ -90,14 +85,14 @@ export default function StoreScreen() {
     const [loading, setLoading] = useState(true);
     const [hideOutOfStock, setHideOutOfStock] = useState(false);
     const [orderType, setOrderType] = useState<'DINE-IN' | 'TAKE OUT' | 'DELIVERY'>('TAKE OUT');
-    const [discountCode, setDiscountCode] = useState('');
-    const [discountAmount, setDiscountAmount] = useState(0);
-    const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
-    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [successOrderId, setSuccessOrderId] = useState<string>('');
+    const [discountCode, setDiscountCode] = useState('');
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [appliedDiscount, setAppliedDiscount] = useState<Discount | null>(null);
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const [cart, setCart] = useState<Array<{
         id: string;
         name: string;
@@ -162,6 +157,9 @@ export default function StoreScreen() {
         const settings = loadSettingsFromLocal();
         setHideOutOfStock(settings.hideOutOfStock);
     }, []);
+
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = subtotal - discountAmount;
 
     // Helper function to get category name from real categories data
     const getCategoryName = (categoryId: number | string) => {
@@ -286,52 +284,7 @@ export default function StoreScreen() {
             }]);
         }
     };
-
-    const subtotal = cart.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-    );
-    const total = subtotal - discountAmount;
-
-    // Get unique category IDs from cart items
-    const getCartCategoryIds = (): string[] => {
-        const categoryIds = cart.map(item => String(item.categoryId));
-        return [...new Set(categoryIds)]; // Remove duplicates
-    };
-
-    // Handle discount application
-    const handleDiscountApplied = (discount: Discount | null, amount: number) => {
-        setAppliedDiscount(discount);
-        setDiscountAmount(amount);
-        if (discount) {
-            console.log('Discount applied:', discount.discount_code, 'Amount:', amount);
-        } else {
-            console.log('Discount cleared');
-        }
-    };
-
-    const updateQuantity = (id: string, delta: number) => {
-        console.log(`Updating quantity for item ${id} by ${delta}`);
-        setCart(
-            cart
-                .map((item) => {
-                    if (item.id === id) {
-                        const newQuantity = Math.max(0, item.quantity + delta);
-                        // Check if we can increase quantity based on available stock
-                        if (delta > 0) {
-                            const availableStock = getAvailableStock(id);
-                            if (availableStock <= 0) {
-                                return item; // Don't increase if no available stock
-                            }
-                        }
-                        return { ...item, quantity: newQuantity };
-                    }
-                    return item;
-                })
-                .filter((item) => item.quantity > 0)
-        );
-    };
-
+        
     // Function to clear the cart
     const clearCart = () => {
         setCart([]);
@@ -345,13 +298,7 @@ export default function StoreScreen() {
         setShowSuccessToast(false);
         setSuccessOrderId('');
     };
-
-    // Function to handle placing order
-    const handlePlaceOrder = () => {
-        if (cart.length === 0 || !user) return;
-        setShowOrderConfirmation(true);
-    };
-
+    
     // Function to confirm and actually place the order
     const confirmPlaceOrder = async () => {
         if (cart.length === 0 || isPlacingOrder || !user) return;
@@ -413,16 +360,16 @@ export default function StoreScreen() {
                 console.error('Failed to print receipt:', printErr);
             }
 
-            // Show success toast
-            setSuccessOrderId(orderId);
-            setShowSuccessToast(true);
+                // Show success toast
+                setSuccessOrderId(orderId);
+                setShowSuccessToast(true);
 
-            // Clear the cart after successful order
-            clearCart();
-            setDiscountCode('');
-            setDiscountAmount(0);
-            setAppliedDiscount(null);
-            setShowOrderConfirmation(false);
+                // Clear the cart after successful order
+                clearCart();
+                // setDiscountCode('');
+                setDiscountAmount(0);
+                setAppliedDiscount(null);
+                setShowOrderConfirmation(false);
 
         } catch (error) {
             console.error('Error placing order:', error);
@@ -440,20 +387,18 @@ export default function StoreScreen() {
                 <TopBar title="Store" icon={<StoreIcon />} />
 
                 {/* Search Section - Fixed */}
-                <div className="px-6 py-4">
-                    <div className="relative">
+                <div className="px-6">
+                    <div className="relative ">
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search items, categories, or descriptions..."
-                            className={`w-full text-[12px] px-4 py-3 pr-12 shadow-md bg-white rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent ${searchQuery ? 'animate-pulse transition-all' : ''}`}
+                            className={`w-full text-[12px] px-4 py-3 pr-12 shadow-sm bg-white rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent ${searchQuery ? 'animate-pulse transition-all' : ''}`}
                         />
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                             {searchQuery ? (
-                                <div className="size-[30px] border-[var(--accent)] border-y-2 rounded-full flex items-center justify-center animate-spin">
-
-                                </div>
+                                <div className="size-[30px] border-[var(--accent)] border-y-2 rounded-full flex items-center justify-center animate-spin"/>
                             ) : (
                                 <div className="size-[30px] bg-[var(--light-accent)] rounded-full flex items-center justify-center">
                                     <SearchIcon className="mr-[2px] mb-[2px]"/>
@@ -464,7 +409,7 @@ export default function StoreScreen() {
                 </div>
 
                 {/* Results Header - Fixed */}
-                <div className="flex items-center justify-between px-6 py-2">
+                <div className={`flex items-center justify-between px-6 pb-2 ${isSearching ? "py-2" : "py-0"}`}>
                     <div className="flex flex-col">
                         <h2 className="text-[var(--secondary)] font-bold">
                             {isSearching ? "Search Results" : ""}
@@ -478,7 +423,7 @@ export default function StoreScreen() {
                 </div>
 
                 {/* Category Selector - Fixed */}
-                <div className="px-6 py-2 flex gap-2 overflow-x-auto flex-wrap">
+                <div className="px-6 py-2 flex gap-3 overflow-x-auto wrap-anywhere">
                     {displayCategories.map((category) => (
                         <button
                             key={category.id}
@@ -486,7 +431,7 @@ export default function StoreScreen() {
                             className={`px-4 py-2 rounded-lg font-medium text-[12px] whitespace-nowrap transition-all ${
                                 isCategorySelected(category.name)
                                     ? `${!category.isSpecial ? "bg-[var(--secondary)]/20" : "bg-[var(--accent)]"} text-[var(--secondary)] shadow-none`
-                                    : 'bg-white text-[var(--secondary)] hover:bg-gray-200 shadow-md'
+                                    : 'bg-white text-[var(--secondary)] hover:bg-gray-200 shadow-sm'
                             }`}
                         >
                             <div className={`${!category.isSpecial ? "pl-2" : ""}`} style={{ borderLeftWidth: `${!category.isSpecial ? "4px" : "0px"}`, borderColor: getCategoryColor(category.id) }}>
@@ -502,7 +447,7 @@ export default function StoreScreen() {
                 </div>
                 
                 {/* Menu Items - Scrollable */}
-                <div className="flex-1 overflow-y-auto px-6 pb-6">
+                <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-8 gap-4">
                             <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-[var(--accent)]"></div>
@@ -564,7 +509,7 @@ export default function StoreScreen() {
                             )}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-4 justify-center gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 sm:bg-green-200 md:bg-amber-300 lg:grid-cols-1 lg:bg-blue-300 xl:grid-cols-3 xl:bg-purple-300  justify-center gap-3">
                             {filteredItems.map((item, index) => {
                                 const availableStock = getAvailableStock(item.id || '0');
                                 const isOutOfStock = availableStock <= 0;
@@ -576,13 +521,13 @@ export default function StoreScreen() {
                                         key={item.id || index}
                                         onClick={() => !isOutOfStock && addToCart(item)}
                                         className={`
-                                            bg-[var(--primary)] rounded-lg p-4 h-85 md:h-95 lg:h-75 cursor-pointer shadow-md
-                                            hover:shadow-lg hover:border-[var(--accent)] hover:scale-105 transition-all
+                                            bg-[var(--primary)] rounded-lg p-4 h-auto lg:h-90 xl:h-70 cursor-pointer shadow-sm
+                                            hover:shadow-md hover:border-[var(--accent)] hover:scale-105 transition-all
                                             ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'border-gray-200 hover:border-[var(--accent)]'}
                                         `}
                                     >
                                         {/* Item Image Placeholder */}
-                                        <div className="w-full h-60 md:h-70 lg:h-50 bg-[#F7F7F7] rounded-lg mb-3 relative overflow-hidden">
+                                        <div className="w-full h-60 lg:h-65 xl:h-45 bg-[#F7F7F7] rounded-lg mb-3 relative overflow-hidden">
                                             {item.imgUrl ? (
                                                 <SafeImage 
                                                     src={item.imgUrl} 
@@ -591,7 +536,7 @@ export default function StoreScreen() {
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">
-                                                    <LogoIcon className="w-20 h-20" />
+                                                    <LogoIcon className="size-16" />
                                                 </div>
                                             )}
                                             
@@ -641,238 +586,30 @@ export default function StoreScreen() {
             </div>
 
             {/* Right Side Panel - Order Summary */}
-            <div className="flex flex-col h-full shadow-lg bg-[var(--primary)] overflow-hidden w-[360px] flex-shrink-0">
-                {/* Header Section - Fixed at top (154px total) */}
-                <div className="flex-shrink-0">
-                    <div className="w-full h-[90px] bg-[var(--primary)] border-b border-[var(--secondary)]/20 border-dashed">
-                        {/* Order Header */}
-                        <div className="flex items-center gap-3 p-3">
-                            <div className="bg-[var(--light-accent)] w-16 h-16 rounded-full items-center justify-center flex relative">
-                                <OrderCartIcon/>
-                                {cart.length > 0 && (
-                                    <div className="absolute -top-1 -right-1 bg-[var(--accent)] text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
-                                        {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex flex-1 flex-col items-center">
-                                <span className="text-[var(--secondary)] font-medium text-[16px] self-start">
-                                    {cart.length === 0 ? 'New Order' : 'Current Order'}
-                                </span>
-                                <span className="text-[var(--secondary)] font-light text-[12px] self-start">
-                                    {cart.length === 0 ? 'No items added' : `${cart.length} item${cart.length !== 1 ? 's' : ''}`}
-                                </span>
-                            </div>
-                            {cart.length > 0 && (
-                                <button 
-                                    onClick={clearCart}
-                                    className="text-[var(--error)] border-1 border-[var(--error)] hover:text-white text-xs font-medium hover:bg-[var(--error)]/50 px-2 py-1 rounded transition-all"
-                                    title="Clear all items"
-                                >
-                                    Clear
-                                </button>
-                            )}
-                            <div className="hidden bg-[var(--light-accent)] w-16 h-16 rounded-full"></div>
-                        </div>
-                    </div>
-
-                    <div className="h-16 p-3 border-b-2 border-[var(--accent)]">
-                        <div className="flex h-[42px] items-center justify-between bg-[var(--background)] rounded-[24px] gap-3">
-                            <DropdownField
-                                options={["DINE-IN", "TAKE OUT", "DELIVERY"]}
-                                defaultValue="TAKE OUT"
-                                dropdownPosition="bottom-right"
-                                dropdownOffset={{ top: 2, right: 0 }}
-                                onChange={(value) => setOrderType(value as 'DINE-IN' | 'TAKE OUT' | 'DELIVERY')}
-                                roundness={"full"}
-                                height={42}
-                                valueAlignment={'left'}
-                                padding=""
-                                shadow={false}
-                            />
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Cart Items - Scrollable middle section */}
-                <div className="flex-1 overflow-y-auto px-3 p-6">
-                    {cart.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full py-12">
-                            <div className="w-[150px] h-[120px] flex items-center justify-center mb-4 opacity-40">
-                                <EmptyOrderIllustration />
-                            </div>
-                            <h3 className="text-lg font-medium text-[var(--secondary)] mb-2 select-none">
-                                Order List is Empty
-                            </h3>
-                            <p className="text-[var(--secondary)] w-[300px] opacity-70 text-center max-w-sm text-sm leading-relaxed select-none">
-                                Add items from the menu to start building your order. Click on any menu item to add it to your cart.
-                            </p>
-                        </div>
-                    ) : (
-                        /* Cart Items */
-                        <div className="space-y-0">
-                            <AnimatePresence mode="popLayout">
-                                {cart.map((item, index) => (
-                                    <motion.div 
-                                        key={item.id}
-                                        initial={{ opacity: 0, x: 100, scale: 0.9 }}
-                                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                                        exit={{ 
-                                            opacity: 0, 
-                                            x: -100, 
-                                            scale: 0.8, 
-                                            height: 0
-                                        }}
-                                        transition={{ 
-                                            duration: 0.3,
-                                            type: "spring",
-                                            stiffness: 300,
-                                            damping: 25,
-                                            delay: index * 0.05
-                                        }}
-                                        layout
-                                        layoutId={`cart-item-${item.id}`}
-                                        className="flex flex-col items-center justify-around w-full h-[128px] bg-white overflow-hidden"
-                                    >
-                                            <div className="flex flex-row items-center gap-3 w-full h-[100px]">
-                                                <div className="flex-none w-[102px] h-[100px] bg-[#F7F7F7] rounded-md relative overflow-hidden">
-                                                    {item.imgUrl ? (
-                                                        <SafeImage 
-                                                            src={item.imgUrl} 
-                                                            alt={item.name}
-                                                        />
-                                                    ) : null}
-                                                    {!item.imgUrl && (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <LogoIcon className="w-10 h-10"/>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex flex-col items-start gap-3 w-[278px] h-[100px] flex-grow">
-                                                    {/* Item Info Section */}
-                                                    <div className="flex flex-col items-start gap-2 w-full h-[53px] flex-grow">
-                                                        {/* Title and Quantity Row */}
-                                                        <div className="flex flex-row items-center justify-between gap-2 w-full h-[21px]">
-                                                            <span className="font-normal text-base leading-[21px] text-[#4C2E24] font-['Poppins'] truncate">
-                                                                {item.name}
-                                                            </span>
-                                                        </div>
-                                                        {/* Price and Subtotal Row */}
-                                                        <div className="flex flex-row items-center justify-between w-full h-[21px]">
-                                                            <span className="space-x-2 flex items-center">
-                                                                <span className="font-normal text-sm leading-[21px] text-[var(--secondary)] font-['Poppins']">
-                                                                    {formatCurrency(item.price)}
-                                                                </span>
-                                                                <span className="font-bold text-sm text-shadow-lg leading-[21px] text-[var(--primary)] font-['Poppins'] bg-[var(--accent)]/80 px-2 py-1 rounded-full min-w-[24px] text-center">
-                                                                    ×{item.quantity}
-                                                                </span>
-                                                            </span>
-                                                            <span className="space-x-2 flex items-center">
-                                                                <span className="font-normal text-sm leading-[21px] text-[var(--secondary)] font-['Poppins']">
-                                                                    =
-                                                                </span>
-                                                                <span className="font-bold text-sm leading-[21px] text-[var(--secondary)] font-['Poppins']">
-                                                                    {formatCurrency(item.price * item.quantity)}
-                                                                </span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Controls Section */}
-                                                    <div className="flex flex-row justify-end items-end gap-3 w-full h-[35px]">
-
-                                                        {/* Quantity Controls */}
-                                                        <div className="flex flex-row justify-between items-center px-[6px] w-[120px] h-[35px] bg-[var(--light-accent)] rounded-[24px]">
-                                                            <button
-                                                                onClick={() => updateQuantity(item.id, -1)}
-                                                                className="flex flex-col justify-center items-center p-[6px] gap-5 w-[23px] h-[23px] bg-white rounded-[24px] hover:scale-110 hover:bg-[var(--accent)] transition-all"
-                                                            >
-                                                                <MinusIcon/>
-                                                            </button>
-
-                                                            <span className="font-bold text-base leading-[21px] text-[var(--secondary)] font-['Poppins']">
-                                                                {item.quantity}
-                                                            </span>
-
-                                                            <button
-                                                                onClick={() => updateQuantity(item.id, 1)}
-                                                                className="flex flex-col justify-center items-center p-[6px] gap-5 w-[23px] h-[23px] bg-white rounded-[24px] hover:scale-110 hover:bg-[var(--accent)] transition-all"
-                                                            >
-                                                                <PlusIcon />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <AnimatePresence>
-                                                <motion.div 
-                                                    key={`divider-${index}`}
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: index === cart.length - 1 ? 0 : 1 }}
-
-                                                    transition={{ 
-                                                        duration: 0.3,
-                                                        type: "spring",
-                                                        stiffness: 300,
-                                                        damping: 25,
-                                                        delay: index * 0.05
-                                                    }}
-                                                    className="flex h-[1px] border-1 border-b border-dashed border-[var(--secondary)]/20 w-full"
-                                                />
-                                            </AnimatePresence>
-                                        </motion.div>
-                                    ))}
-                            </AnimatePresence>
-                        </div>
-                    )}
-                </div>
-
-                {/* Order Summary */}
-                <div className="flex-shrink mb-[40px] border-t-2 border-[var(--accent)]">
-                    <div className="flex justify-between h-[39px] text-[var(--secondary)] text-[14px] font-medium px-3 py-[6px] items-end">
-                        <span>Subtotal</span>
-                        <span>{formatCurrency(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between h-[33px] text-[var(--secondary)] text-[14px] font-medium px-3 py-[6px]">
-                        <span>Discount</span>
-                        <span>-{formatCurrency(discountAmount)}</span>
-                    </div>
-
-                    <div className="gap-2 p-3">
-                        <DiscountDropdown
-                            value={discountCode}
-                            onChange={setDiscountCode}
-                            onDiscountApplied={handleDiscountApplied}
-                            subtotal={subtotal}
-                            cartCategoryIds={getCartCategoryIds()}
-                            categories={categories}
-                        />
-                    </div>
-
-                    <div className="border-t-1 border-dashed border-[var(--accent)] h-[124px]">
-                        <div className="flex justify-between font-semibold text-lg h-[62px] p-3 items-center">
-                            <span>Total</span>
-                            <span>{formatCurrency(total)}</span>
-                        </div>
-
-                        {/* Place Order Button */}
-                        <button 
-                            onClick={handlePlaceOrder}
-                            disabled={cart.length === 0 || isPlacingOrder || !user}
-                            className={`w-full py-4 font-black text-[18px] transition-all ${
-                                cart.length === 0 || isPlacingOrder || !user
-                                    ? 'bg-gray-300 text-[var(--primary)] cursor-not-allowed' 
-                                    : 'bg-[var(--accent)] text-[var(--primary)] hover:bg-[var(--accent)]/80 hover:text-shadow-none hover:shadow-lg cursor-pointer text-shadow-lg'
-                            }`}
-                        >
-                            <span>
-                                {!user ? 'PLEASE LOGIN TO ORDER' : isPlacingOrder ? 'PLACING ORDER...' : cart.length === 0 ? 'ADD ITEMS TO ORDER' : 'PLACE ORDER'}
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <RightSidePanel
+                setOrderType={setOrderType}
+                setShowSuccessToast={setShowSuccessToast}
+                setSuccessOrderId={setSuccessOrderId}
+                setShowOrderConfirmation={setShowOrderConfirmation}
+                cart={cart}
+                setCart={setCart}
+                getAvailableStock={getAvailableStock}
+                createOrder={createOrder}
+                user={user}
+                orderType={orderType}
+                categories={categories}
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+                discountAmount={discountAmount}
+                setDiscountAmount={setDiscountAmount}
+                appliedDiscount={appliedDiscount}
+                setAppliedDiscount={setAppliedDiscount}
+                isPlacingOrder={isPlacingOrder}
+                setIsPlacingOrder={setIsPlacingOrder}
+                subtotal={subtotal}
+                total={total}
+                clearCart={clearCart}
+            />
 
             {/* Order Confirmation Modal */}
             {showOrderConfirmation && (
