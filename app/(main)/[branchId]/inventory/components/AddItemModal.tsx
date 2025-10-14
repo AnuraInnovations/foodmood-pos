@@ -6,6 +6,7 @@ import { InventoryItem, createInventoryItem } from '@/services/inventoryService'
 import { Category } from '@/services/categoryService';
 import PlusIcon from '@/components/icons/PlusIcon';
 import DropdownField from '@/components/DropdownField';
+import { useBranch } from '@/contexts/BranchContext';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function AddItemModal({
   onClose,
   onError
 }: AddItemModalProps) {
+  const { currentBranch } = useBranch();
   const [loading, setLoading] = useState(false);
   const [newItem, setNewItem] = useState({ 
     name: "", 
@@ -77,10 +79,11 @@ export default function AddItemModal({
         categoryId: newItem.categoryId,
         stock: finalStock,
         description: newItem.description,
-        imgUrl: newItem.imgUrl || ''
+        imgUrl: newItem.imgUrl || '',
+        branchId: currentBranch!.id
       };
       
-      await createInventoryItem(itemData);
+      await createInventoryItem(currentBranch!.id, itemData);
       
       // Reset form
       setNewItem({ 
